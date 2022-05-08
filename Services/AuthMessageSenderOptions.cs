@@ -3,6 +3,6 @@
     public class AuthMessageSenderOptions
     {
         //add your key here
-        public string? SendGridKey { get; set; } = $"{ secrets.SendGridKey }";
+        public string? SendGridKey { get; set; } = "";
     }
 }
