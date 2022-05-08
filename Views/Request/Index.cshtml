@@ -1,0 +1,70 @@
+﻿@model CountryhouseService.Controllers.RequestController.RequestPagedResult
+@using CountryhouseService.Helpers
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@inject CountryhouseService.Data.ApplicationDbContext _dbcontext
+@{
+    ViewData["Title"] = "Requests";
+
+}
+<style>
+.items-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+.button-with-interval{
+    margin-top: 1.5px;
+}
+.button-single{
+    margin-top: 25px;
+}
+
+</style>
+<h2>Requests</h2>
+Total: @Model.RequestList.Count <br />
+    @if (Model.RequestList.Count != 0)
+    {
+        @foreach (Request request in Model.RequestList)
+        {
+             <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                    @{Ad requestad = Model.Ads.Find(s => s.AdId == request.AdId); User worker = Model.Users.Find(s => s.Id == request.WorkerId);}
+                    <div class="col p-4 d-flex flex-column position-static">
+                        <div class="row">
+                        <div class="col-md-4">
+                        <h3 class="mb-0">@worker.FirstName @worker.LastName</h3>
+                        @worker.PhoneNumber
+                        <p>@worker.Email</p>
+                        </div>
+                        <div class = "col-md-4">
+                            <h4><a href="/Ad/@requestad.AdId">@requestad.Title</a></h4>
+                            <div class="items-text">
+                                @requestad.Description
+                            </div>
+                        </div>
+                        <div class = "col-md-4">
+                            <h3>Status: @request.Status</h3>
+                        @if (User.IsInRole("Owner") && request.Status != "Accepted")
+                        {
+                            <a href="/Request/Accept/@request.RequestId" class="btn btn-success" role="button" aria-pressed="true">Accept</a>
+                                <a href="/Request/Decline/@request.RequestId" class="btn btn-secondary" role="button" aria-pressed="true">Decline</a>
+                        }
+                        else if(User.IsInRole("Worker") && request.Status != "Accepted")
+                        {
+                        <a href="/Request/Delete/@request.RequestId" class="btn btn-danger" role="button" aria-pressed="true">Delete</a>    
+                        }
+                    </div>
+                        </div>
+                       <p>@request.Comment</p> 
+                    </div>
+                    </div>
+    }
+}
+    else
+    {
+        <div class="row">There are no requests.</div>
+    }
+Page @(Model.RequestList.PageCount < Model.RequestList.PageNumber ? 0 : Model.RequestList.PageNumber) of @Model.RequestList.PageCount
+@Html.PagedListPager(Model.RequestList, page => Url.Action("Index", new { page}))
