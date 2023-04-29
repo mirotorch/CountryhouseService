@@ -1,0 +1,97 @@
+﻿@using CountryhouseService.Data
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model CountryhouseService.Controllers.AdController.AdsListPagedResult
+@inject ApplicationDbContext _dbcontext
+@{
+    ViewData["Title"] = "Ads";
+    string link;
+}
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
+<style>
+	.ad-description {
+		word-wrap: break-word;
+		max-height: 100px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+</style>
+@if (User.IsInRole("Owner"))
+{
+    <div class="col-12"><a asp-action="Create" class="btn btn-primary">Create Ad</a></div>
+}
+<form class="form-inline" asp-action="Index" method="get">
+    <label for="search-string" class="mb-2 mr-sm-2">Search by title</label>
+    <div class="input-group mb-2 mr-2 flex-grow-1">
+        <input id="search-string" type="text" class="form-control" placeholder="Enter the title..." value="@Model.CurrentSearchString" name="searchString">
+        <div class="input-group-append">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+    <label for="sort-order" class="mb-2 mr-sm-2">Sort by</label>
+    <select id="sort-order" type="text" class="form-control mb-2 mr-2" onchange="this.form.submit()" name="SortOrder">
+        <option id="newest" value="newest">Oldest</option>
+        <option id="oldest" value="oldest">Newest</option>
+        <option id="status" value="status">Available only</option>
+        <option id="payment_desc" value="payment_desc">From expensive to cheap</option>
+        <option id="payment_asc" value="payment_asc">From cheap to expensive</option>
+    </select>
+</form>
+
+<div class="row">
+    @if (Model.AdList.Count() != 0)
+    {
+        @foreach (Ad ad in Model.AdList)
+        {
+           link = "https://skillz4kidzmartialarts.com/wp-content/uploads/2017/04/default-image-620x600.jpg";
+           Image? img = _dbcontext.Images.FirstOrDefault(s => s.Ad == ad);
+           if(img != null) link = "https://localhost:7071/Media/" + img.ImageId.ToString();
+            <div class="col-12">
+                <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                    <div class="col-auto d-none d-lg-block pr-0">
+                        <img src="@link" class="embed-responsive-1by1" width="250" height="250" />
+                    </div>
+                    <div class="col p-4 d-flex flex-column position-static">
+                        <strong class="d-inline-block mb-2 text-success"></strong>
+                        <h3 class="mb-0">@ad.Title</h3>
+                        <div class="mb-1 text-muted">
+                            @if (ad.FromDate != null)
+                            {
+                                DateTime fromDate = (DateTime)ad.FromDate;
+                                @:Start from: @fromDate.ToShortDateString() &nbsp;
+                            }
+                            End Until: @ad.UntilDate.ToShortDateString()
+                        </div>
+                        <p class="ad-description">@ad.Description</p>
+                        <p>Payment: @ad.Payment.ToString() $</p>
+                        <p>Owner: @_dbcontext.Users.Find(ad.CreatorId).UserName</p> 
+                        <a href="/Ad/@ad.AdId">Read more</a>
+                        <p>Status: <strong>@ad.Status</strong></p>
+                    </div>
+                    <div class="row">
+                    <div class = "col md-2">
+                    <div class="mb-1 text-muted"> Created: @ad.created_at.ToShortDateString() &nbsp&nbsp Updated: @ad.UpdatedOn.ToShortDateString()</div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="row">No content on this page yet</div>
+    }
+</div>
+<br />
+Page @(Model.AdList.PageCount < Model.AdList.PageNumber ? 0 : Model.AdList.PageNumber) of @Model.AdList.PageCount
+@Html.PagedListPager(Model.AdList, page => Url.Action("Index", 
+    new { page, sortOrder = ViewBag.CurrentSort, currentFilter = ViewBag.CurrentFilter }))
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        $(function () {
+            $(@Model.CurrentSortOrder).attr("selected", "");
+        })
+    </script>
+}
